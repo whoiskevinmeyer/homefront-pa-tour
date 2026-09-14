@@ -2,444 +2,1044 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Homefront PA customer tour</title>
-<meta name="description" content="Research share — Homefront PA customer tour"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Newsreader:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="theme-color" content="#f5f5f7"/>
+<meta name="color-scheme" content="light"/>
+<title>Homefront PA tour</title>
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet"/>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <style>
-:root{
-  --bg:#0c0e12; --bg2:#12151c; --panel:#161a22; --line:#2a3140;
-  --text:#eef1f6; --muted:#9aa3b5; --accent:#7dd3c0; --accent2:#8ab4ff;
-  --chip:#1c2230; --ok:#3dd68c; --warn:#f0b429;
-  --radius:14px; --shadow:0 18px 50px rgba(0,0,0,.45);
-  --font: "DM Sans", system-ui, sans-serif;
-  --display: "Newsreader", Georgia, serif;
+:root {
+  --bg: #f5f5f7;
+  --surface: #ffffff;
+  --text: #1d1d1f;
+  --muted: #6e6e73;
+  --faint: #86868b;
+  --line: rgba(0,0,0,.08);
+  --line-strong: rgba(0,0,0,.12);
+  --accent: #0071e3;
+  --accent-hover: #0077ed;
+  --good: #34c759;
+  --good-soft: rgba(52,199,89,.12);
+  --radius: 18px;
+  --radius-sm: 12px;
+  --nav-h: 48px;
+  --shadow: 0 2px 12px rgba(0,0,0,.06);
+  --shadow-lift: 0 8px 28px rgba(0,0,0,.08);
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --measure: min(980px, calc(100% - 2.5rem));
 }
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{
-  margin:0; font-family:var(--font); background:
-    radial-gradient(1200px 600px at 10% -10%, #1a2438 0%, transparent 55%),
-    radial-gradient(900px 500px at 100% 0%, #1a2a28 0%, transparent 50%),
-    var(--bg);
-  color:var(--text); line-height:1.5;
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: calc(var(--nav-h) + 16px); }
+body {
+  margin: 0;
+  font: 17px/1.47 var(--font);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
-a{color:var(--accent2); text-decoration:none}
-a:hover{text-decoration:underline}
-img{max-width:100%; display:block}
-.wrap{max-width:1180px; margin:0 auto; padding:0 1.25rem 4rem}
+::selection { background: rgba(0,113,227,.18); color: var(--text); }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+img { max-width: 100%; display: block; }
+.wrap { width: var(--measure); margin-inline: auto; }
 
-/* hero */
-.hero{
-  position:relative; min-height:42vh; display:grid; align-items:end;
-  border-bottom:1px solid var(--line); overflow:hidden;
+/* —— Sticky nav (no-overlap HARD) —— */
+.toc {
+  position: sticky; top: 0; z-index: 50;
+  min-height: var(--nav-h);
+  height: auto;
+  display: flex; align-items: center;
+  background: rgba(245,245,247,.92);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--line);
 }
-.hero-bg{
-  position:absolute; inset:0; background:
-    linear-gradient(180deg, rgba(12,14,18,.2), rgba(12,14,18,.92)),
+.toc-inner {
+  width: min(980px, calc(100% - 1.25rem));
+  margin: 0 auto;
+  display: flex; align-items: center; flex-wrap: wrap;
+  gap: .35rem .4rem;
+  padding: .45rem 0;
+  /* never single-line overflow/clip that stacks labels on each other */
+  overflow: visible;
+}
+.toc-brand {
+  display: inline-flex; align-items: center; gap: .55rem;
+  font-weight: 600; font-size: .88rem;
+  color: var(--text); white-space: nowrap;
+  margin-right: .35rem; letter-spacing: -0.01em;
+  text-decoration: none;
+  flex: 0 0 auto;
+  z-index: 1;
+}
+.toc-brand:hover { text-decoration: none; color: var(--text); }
+.toc-brand img {
+  height: 22px; width: auto; display: block;
+  object-fit: contain;
+}
+.toc-toggle {
+  display: none;
+  margin-left: auto;
+  flex: 0 0 auto;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 980px;
+  padding: .45rem .9rem;
+  font: 600 .82rem var(--font);
+  cursor: pointer;
+  z-index: 2;
+}
+.toc-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.toc-links {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: .3rem .25rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+@media (max-width: 820px) {
+  .toc-toggle { display: inline-flex; align-items: center; }
+  .toc-links {
+    display: none;
+    flex: 1 1 100%;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    padding: .45rem 0 .35rem;
+    border-top: 1px solid var(--line);
+    margin-top: .15rem;
+    gap: .2rem;
+  }
+  .toc.is-open .toc-links {
+    display: flex;
+  }
+  .toc-links a.nav {
+    width: 100%;
+    box-sizing: border-box;
+    font-size: .92rem;
+    padding: .7rem .85rem;
+    border-radius: 12px;
+    background: rgba(0,0,0,.04);
+  }
+}
+@media (min-width: 821px) and (max-width: 1100px) {
+  /* tablet: pills wrap to second row instead of overlapping */
+  .toc-links { flex: 1 1 100%; }
+}
+.client-logo-hero {
+  height: clamp(36px, 6vw, 52px);
+  width: auto;
+  margin: 0 0 1rem;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,.35));
+}
+.client-lock {
+  display: flex; align-items: center; gap: .85rem;
+  margin: 1.5rem 0 0;
+  padding: 1rem 1.15rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  max-width: 28rem;
+}
+.client-lock img {
+  height: 40px; width: auto; object-fit: contain; flex: 0 0 auto;
+}
+.client-lock .meta { min-width: 0; }
+.client-lock .meta .name {
+  font-weight: 600; font-size: .95rem; letter-spacing: -0.015em; color: var(--text);
+}
+.client-lock .meta .sub {
+  margin-top: .15rem; font-size: .82rem; color: var(--muted);
+}
+.client-lock a { color: var(--accent); font-weight: 500; }
+.toc a.nav {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: .78rem; font-weight: 500;
+  padding: .4rem .55rem; border-radius: 980px;
+  text-decoration: none; letter-spacing: -0.01em;
+}
+.toc a.nav:hover { color: var(--text); background: rgba(0,0,0,.04); text-decoration: none; }
+.toc a.nav[aria-current="true"] {
+  color: var(--text); background: rgba(0,0,0,.06); font-weight: 600;
+}
+
+/* —— Apple section type —— */
+.eyebrow {
+  margin: 0 0 .5rem;
+  font-size: 12px; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted);
+}
+.section-title {
+  margin: 0;
+  font-size: clamp(1.75rem, 3.6vw, 2.5rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  color: var(--text);
+}
+.section-dek {
+  margin: .65rem 0 0;
+  font-size: clamp(1.05rem, 1.6vw, 1.2rem);
+  line-height: 1.4;
+  color: var(--muted);
+  max-width: 38rem;
+  font-weight: 400;
+}
+.sec-head { margin-bottom: 2.25rem; max-width: 42rem; }
+.sec-head .eyebrow { margin-bottom: .65rem; }
+
+/* —— Hero —— */
+.hero {
+  position: relative;
+  min-height: min(72vh, 640px);
+  display: grid; align-items: end;
+  overflow: hidden;
+  background: #000;
+}
+.hero-media {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.18) 0%, rgba(0,0,0,.35) 42%, rgba(0,0,0,.78) 100%),
     url('img/hero.jpg') center/cover no-repeat;
-  filter:saturate(1.05);
 }
-.hero-inner{position:relative; z-index:1; padding:4.5rem 0 2rem; max-width:1180px; margin:0 auto; width:100%; padding-left:1.25rem; padding-right:1.25rem}
-.hero h1{
-  font-family:var(--display); font-weight:600; font-size:clamp(2.1rem, 4.5vw, 3.4rem);
-  letter-spacing:-0.03em; line-height:1.05; margin:0 0 .6rem; max-width:18ch;
+.hero-body {
+  position: relative; z-index: 1;
+  padding: clamp(5rem, 12vw, 7.5rem) 0 clamp(2.5rem, 5vw, 3.5rem);
+  color: #f5f5f7;
 }
-.hero .lede{color:var(--muted); font-size:1.05rem; max-width:52ch; margin:0 0 1.25rem}
-.meta-row{display:flex; flex-wrap:wrap; gap:.5rem}
-.pill{
-  display:inline-flex; align-items:center; gap:.35rem;
-  background:rgba(255,255,255,.06); border:1px solid var(--line);
-  border-radius:999px; padding:.35rem .75rem; font-size:.82rem; color:var(--muted);
+.hero .eyebrow { color: rgba(245,245,247,.72); }
+.hero .section-title {
+  color: #fff;
+  font-size: clamp(2.4rem, 6vw, 4rem);
+  max-width: 12ch;
+  letter-spacing: -0.03em;
 }
-.pill strong{color:var(--text); font-weight:600}
+.hero .section-dek {
+  color: rgba(245,245,247,.78);
+  max-width: 34rem;
+  font-size: clamp(1.1rem, 2vw, 1.3rem);
+}
+.pills {
+  display: flex; flex-wrap: wrap; gap: .5rem;
+  margin-top: 1.5rem;
+}
+.pill {
+  display: inline-flex; align-items: center; gap: .35rem;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.08);
+  backdrop-filter: blur(8px);
+  border-radius: 980px;
+  padding: .4rem .85rem;
+  font-size: .82rem; color: rgba(245,245,247,.85);
+}
+.pill b { color: #fff; font-weight: 600; }
+.pill.ok {
+  border-color: rgba(52,199,89,.45);
+  background: rgba(52,199,89,.15);
+  color: #a8f0b8;
+}
+.pill.ok b { color: #c8f7d1; }
 
-/* sticky filters */
-.filters{
-  position:sticky; top:0; z-index:40;
-  backdrop-filter: blur(14px) saturate(1.2);
-  background:rgba(12,14,18,.82);
-  border-bottom:1px solid var(--line);
+.facts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: .75rem;
+  margin-top: 1.75rem;
 }
-.filters-inner{
-  max-width:1180px; margin:0 auto; padding:.75rem 1.25rem;
-  display:flex; flex-wrap:wrap; gap:.6rem; align-items:center;
+@media (max-width: 800px) { .facts { grid-template-columns: 1fr 1fr; } }
+.fact {
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: var(--radius-sm);
+  padding: .9rem 1rem;
+  backdrop-filter: blur(10px);
 }
-.kind-chips{display:flex; flex-wrap:wrap; gap:.4rem; flex:1}
-.chip{
-  appearance:none; border:1px solid var(--line); background:var(--chip);
-  color:var(--muted); border-radius:999px; padding:.4rem .85rem;
-  font:600 .78rem var(--font); cursor:pointer; transition:.15s ease;
+.fact .lbl {
+  display: block;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: .08em; text-transform: uppercase;
+  color: rgba(245,245,247,.55);
+  margin-bottom: .3rem;
 }
-.chip:hover{border-color:#3d465a; color:var(--text)}
-.chip[aria-pressed="true"]{
-  background:linear-gradient(180deg,#243044,#1a2230);
-  border-color:#4a6fa5; color:#dce8ff;
-  box-shadow:0 0 0 1px rgba(138,180,255,.15);
-}
-.controls{display:flex; flex-wrap:wrap; gap:.5rem; align-items:center}
-.controls input, .controls select{
-  background:var(--panel); border:1px solid var(--line); color:var(--text);
-  border-radius:10px; padding:.45rem .7rem; font:500 .85rem var(--font);
-}
-.controls input{min-width:11rem}
-.count{color:var(--muted); font-size:.8rem; white-space:nowrap}
-
-/* layout */
-.grid-main{
-  display:grid; grid-template-columns: 1.15fr .85fr; gap:1.25rem; margin-top:1.25rem;
-}
-@media (max-width: 920px){ .grid-main{grid-template-columns:1fr} .map-panel{order:-1; position:relative!important; top:auto} }
-
-.map-panel{
-  position:sticky; top:4.2rem; align-self:start;
-  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
-  overflow:hidden; box-shadow:var(--shadow); min-height:420px;
-}
-#map{height:min(62vh,560px); width:100%}
-.map-legend{padding:.65rem .85rem; border-top:1px solid var(--line); color:var(--muted); font-size:.78rem}
-
-.section{margin:2rem 0 0}
-.section h2{
-  font-family:var(--display); font-size:1.55rem; letter-spacing:-0.02em;
-  margin:0 0 .85rem; font-weight:600;
+.fact .val {
+  font-size: 1.05rem; font-weight: 600;
+  letter-spacing: -0.015em; color: #fff;
+  font-variant-numeric: tabular-nums;
 }
 
-.cards{
-  display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:.9rem;
+/* —— Sections —— */
+section.block {
+  padding: clamp(3.5rem, 7vw, 6rem) 0 0;
 }
-.card{
-  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
-  overflow:hidden; display:flex; flex-direction:column;
-  transition: transform .15s ease, border-color .15s ease;
-  cursor:pointer;
+.band {
+  background: var(--bg);
 }
-.card:hover{transform:translateY(-2px); border-color:#3d4a63}
-.card:focus-visible{outline:2px solid var(--accent2); outline-offset:2px}
-.card .media{aspect-ratio:16/10; background:#0a0c10; overflow:hidden}
-.card .media img{width:100%; height:100%; object-fit:cover}
-.card .body{padding:.85rem .95rem 1rem; display:flex; flex-direction:column; gap:.35rem; flex:1}
-.card .kicker{font-size:.7rem; text-transform:uppercase; letter-spacing:.06em; color:var(--accent); font-weight:700}
-.card h3{margin:0; font-size:1.02rem; letter-spacing:-0.01em}
-.card .addr{color:var(--muted); font-size:.8rem}
-.card .cap{color:#c5ccd8; font-size:.86rem}
-.card .row{display:flex; justify-content:space-between; align-items:center; margin-top:auto; padding-top:.5rem}
-.rating{font-variant-numeric:tabular-nums; font-weight:700; color:#f3d27a; font-size:.9rem}
-.card .links{display:flex; gap:.55rem; font-size:.8rem}
+.band-alt {
+  background: #fff;
+  margin-top: clamp(3rem, 6vw, 5rem);
+  padding-block: clamp(3.5rem, 7vw, 6rem);
+  border-block: 1px solid var(--line);
+}
+/* Place sections: breathing room between eyebrow blocks and prior card rows */
+.band-alt .wrap > section.block {
+  padding-top: clamp(2.75rem, 5.5vw, 4.5rem);
+  padding-bottom: .15rem;
+}
+.band-alt .wrap > section.block:first-of-type {
+  padding-top: 1.35rem;
+}
 
-.locked{
-  margin:1.25rem 0 0; padding:1.1rem 1.2rem; border-radius:var(--radius);
-  border:1px solid #2f4a3a; background:linear-gradient(135deg,#14201a,#12151c);
+/* Stay card */
+.stay-card {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
 }
-.locked h2{margin:0 0 .4rem; font-size:1.2rem}
-.locked p{margin:.25rem 0; color:var(--muted)}
-.locked code{color:#b7f0d0; font-size:.85rem}
-
-.facts{
-  display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:.75rem; margin-top:1rem;
+@media (max-width: 860px) { .stay-card { grid-template-columns: 1fr; } }
+.stay-gallery {
+  display: grid;
+  grid-template-rows: 1.45fr 1fr;
+  gap: 3px;
+  min-height: 340px;
+  background: #e8e8ed;
 }
-.fact{
-  background:var(--bg2); border:1px solid var(--line); border-radius:12px; padding:.9rem 1rem;
+.stay-gallery img { width: 100%; height: 100%; object-fit: cover; }
+.stay-gallery .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
+.stay-body {
+  padding: clamp(1.4rem, 3vw, 2rem);
+  display: flex; flex-direction: column; gap: .55rem;
 }
-.fact b{display:block; font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:.25rem}
-.fact span{font-size:1.05rem; font-weight:600}
+.stay-body .tag {
+  align-self: flex-start;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: .08em; text-transform: uppercase;
+  color: #248a3d;
+  background: var(--good-soft);
+  border-radius: 980px;
+  padding: .35rem .7rem;
+}
+.stay-body h3 {
+  margin: 0;
+  font-size: clamp(1.45rem, 2.4vw, 1.85rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+.stay-body .addr { color: var(--muted); font-size: .95rem; margin: 0; }
+.stay-body .why { color: var(--text); margin: .2rem 0 .5rem; font-size: 1rem; }
+.rate-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .9rem;
+  margin: .35rem 0;
+}
+.rate-table td {
+  padding: .45rem 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+}
+.rate-table td:last-child {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--text);
+}
+.rate-table tr:last-child td {
+  border-bottom: 0;
+  color: var(--text);
+  font-size: 1.05rem;
+  padding-top: .65rem;
+}
+.stay-meta {
+  color: var(--faint);
+  font-size: .82rem;
+  margin: 0;
+}
+.stay-actions {
+  display: flex; flex-wrap: wrap; gap: .55rem;
+  margin-top: auto; padding-top: 1rem;
+}
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 980px;
+  padding: .65rem 1.2rem;
+  font: 600 .9rem/1 var(--font);
+  border: none;
+  cursor: pointer;
+  text-decoration: none !important;
+  transition: background .15s ease, transform .15s ease;
+}
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-ghost {
+  background: rgba(0,0,0,.05);
+  color: var(--text);
+}
+.btn-ghost:hover { background: rgba(0,0,0,.08); }
 
-footer{margin-top:3rem; padding:1.5rem 0; border-top:1px solid var(--line); color:var(--muted); font-size:.8rem}
+/* Map */
+.map-shell {
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+#map-canvas { height: min(520px, 62vh); width: 100%; }
+.map-note {
+  padding: .75rem 1.1rem;
+  border-top: 1px solid var(--line);
+  color: var(--faint);
+  font-size: .8rem;
+  display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+  background: var(--surface);
+}
+.maplibregl-ctrl-attrib {
+  font-size: 10px !important;
+  background: rgba(255,255,255,.88) !important;
+  color: var(--faint) !important;
+  max-width: 55%;
+}
+.maplibregl-ctrl-logo { opacity: .5; transform: scale(.85); transform-origin: left bottom; }
+.maplibregl-popup-content {
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 12px;
+  padding: .75rem .9rem;
+  font: 13px/1.4 var(--font);
+  box-shadow: var(--shadow-lift);
+  border: 1px solid var(--line);
+}
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip { border-top-color: var(--surface); }
+.maplibregl-popup-close-button { color: var(--muted); font-size: 16px; }
+.marker-dot {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.15), 0 2px 6px rgba(0,0,0,.2);
+  cursor: pointer;
+}
 
-.leaflet-container{background:#0e1218; font:12px var(--font)}
-.pin-dot{
-  width:12px; height:12px; border-radius:50%; border:2px solid #fff;
-  box-shadow:0 0 0 2px rgba(0,0,0,.35);
+/* Filters */
+.toolbar {
+  display: flex; flex-wrap: wrap; gap: .55rem; align-items: center;
+  margin: 0 0 1.25rem;
+  padding: .85rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+}
+.toolbar input, .toolbar select {
+  background: var(--bg);
+  border: 1px solid var(--line-strong);
+  color: var(--text);
+  border-radius: 980px;
+  padding: .55rem .95rem;
+  font: 500 .9rem var(--font);
+}
+.toolbar input { min-width: 14rem; flex: 1; }
+.toolbar input:focus, .toolbar select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0,113,227,.15);
+}
+.count { color: var(--faint); font-size: .82rem; margin-left: auto; font-variant-numeric: tabular-nums; }
+
+/* Cards */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.35rem;
+  row-gap: 1.5rem;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  box-shadow: var(--shadow);
+  transition: box-shadow .18s ease, transform .18s ease, border-color .18s ease;
+  cursor: pointer;
+}
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lift);
+  border-color: var(--line-strong);
+}
+.card .media {
+  aspect-ratio: 16/10;
+  background: #e8e8ed;
+  overflow: hidden;
+}
+.card .media img { width: 100%; height: 100%; object-fit: cover; }
+.card .body {
+  padding: 1rem 1.05rem 1.15rem;
+  display: flex; flex-direction: column; gap: .28rem; flex: 1;
+}
+.card h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--text);
+}
+.card .meta { color: var(--faint); font-size: .82rem; }
+.card .cap { color: var(--muted); font-size: .9rem; }
+.card .foot {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: auto; padding-top: .65rem; gap: .5rem;
+}
+.rating {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--text);
+  font-size: .95rem;
+}
+.rating::before {
+  content: "★ ";
+  color: var(--accent);
+  font-weight: 500;
+}
+.card .links { display: flex; gap: .65rem; font-size: .8rem; font-weight: 600; }
+
+/* Plan / ground */
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+@media (max-width: 800px) { .plan-grid { grid-template-columns: 1fr; } }
+.plan {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.35rem 1.4rem;
+  box-shadow: var(--shadow);
+}
+.plan h3 {
+  font-size: 1.25rem; margin: 0 0 .15rem;
+  font-weight: 600; letter-spacing: -0.02em;
+}
+.plan .when {
+  color: var(--accent);
+  font-size: 12px; font-weight: 600;
+  letter-spacing: .08em; text-transform: uppercase;
+  margin: 0 0 .7rem;
+}
+.plan ul { margin: 0; padding-left: 1.15rem; color: var(--muted); }
+.plan li { margin: .4rem 0; }
+.plan li strong { color: var(--text); font-weight: 600; }
+
+.ground {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+@media (max-width: 720px) { .ground { grid-template-columns: 1fr; } }
+.ground .box {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.35rem 1.4rem;
+  box-shadow: var(--shadow);
+}
+.ground h3 {
+  margin: 0 0 .55rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.ground p { margin: .4rem 0; color: var(--muted); font-size: .98rem; }
+.ground strong { color: var(--text); font-weight: 600; }
+
+footer {
+  margin-top: clamp(3rem, 6vw, 5rem);
+  padding: 1.75rem 0 2.75rem;
+  border-top: 1px solid var(--line);
+  color: var(--faint);
+  font-size: .78rem;
+}
+.empty { color: var(--muted); padding: 1.25rem 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .card { transition: none; }
+  .card:hover { transform: none; }
 }
 </style>
 </head>
+
 <body>
-<header class="hero">
-  <div class="hero-bg" role="presentation"></div>
-  <div class="hero-inner">
-    <h1>Homefront PA customer tour</h1>
-    <p class="lede" id="lede">Replace this lede. Lead with the decision, not the research process. Cite live rates and locked choices.</p>
-    <div class="meta-row">
-      <span class="pill"><strong id="meta-when">2026-09-14</strong></span>
-      <span class="pill" id="meta-where">Location</span>
-      <span class="pill" id="meta-status">Draft</span>
+
+<nav class="toc" id="toc" aria-label="Page sections">
+  <div class="toc-inner">
+    <a class="toc-brand" href="https://polymaker.com/" target="_blank" rel="noopener" title="Polymaker">
+      <img src="img/client-logo-nav.png" width="140" height="45" alt="Polymaker"/>
+      <span>PA tour</span>
+    </a>
+    <button type="button" class="toc-toggle" id="toc-toggle" aria-expanded="false" aria-controls="toc-links" aria-label="Open section menu">Menu</button>
+    <div class="toc-links" id="toc-links">
+      <a class="nav" href="#overview">Overview</a>
+      <a class="nav" href="#stay">Stay</a>
+      <a class="nav" href="#map">Map</a>
+      <a class="nav" href="#pittsburgh">Pittsburgh</a>
+      <a class="nav" href="#south">South</a>
+      <a class="nav" href="#east">East</a>
+      <a class="nav" href="#virginia">Virginia</a>
+      <a class="nav" href="#plan">Plan</a>
+      <a class="nav" href="#ground">Fly</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="overview">
+  <div class="hero-media" role="presentation"></div>
+  <div class="hero-body wrap">
+    <img class="client-logo-hero" src="img/client-logo.png" width="204" height="70" alt="Polymaker"/>
+    <p class="eyebrow">Customer tour</p>
+    <h1 class="section-title">Homefront, Claysburg</h1>
+    <p class="section-dek">Locked visit at Homefront Manufacturing. Nearby accounts grouped by drive. Numbers are Shopify wholesale paid orders in the last 12 months versus the prior 12 months.</p>
+    <div class="pills">
+      <span class="pill ok"><b>Locked</b> Homefront · Claysburg PA</span>
+      <span class="pill"><b>Fly</b> PIT</span>
+      <span class="pill"><b>Cap</b> 3 hours (HITT is 3h 13m)</span>
+      <span class="pill"><b>L12</b> $65,661 on the list</span>
+    </div>
+    <div class="facts">
+      <div class="fact"><span class="lbl">Fly into</span><span class="val">PIT</span></div>
+      <div class="fact"><span class="lbl">Homefront hub</span><span class="val">Altoona · 26 min</span></div>
+      <div class="fact"><span class="lbl">Pittsburgh hub</span><span class="val">Monroeville · 48 min from PIT</span></div>
+      <div class="fact"><span class="lbl">Stops on map</span><span class="val">11 customers + Homefront</span></div>
     </div>
   </div>
 </header>
 
-<div class="filters" role="search" aria-label="Filter places">
-  <div class="filters-inner">
-    <div class="kind-chips" id="kindChips"></div>
-    <div class="controls">
-      <input id="q" type="search" placeholder="Search name or note" autocomplete="off"/>
-      <select id="minRating" aria-label="Minimum rating">
-        <option value="0">Any rating</option>
-        <option value="3.5">≥ 3.5</option>
-        <option value="4">≥ 4.0</option>
-        <option value="4.5">≥ 4.5</option>
-      </select>
-      <select id="sort" aria-label="Sort">
-        <option value="kind">Kind</option>
-        <option value="rating">Rating</option>
-        <option value="name">Name</option>
-      </select>
-      <span class="count" id="count"></span>
-    </div>
-  </div>
-</div>
+<main>
 
-<main class="wrap">
-  <section class="locked" id="locked" hidden>
-    <h2 id="lockedTitle">Locked decision</h2>
-    <p id="lockedBody"></p>
+  <section class="block wrap" id="stay" aria-labelledby="stay-h">
+    <div class="sec-head">
+      <p class="eyebrow">Stay</p>
+      <h2 class="section-title" id="stay-h">Two hotels, not booked</h2>
+      <p class="section-dek">Altoona for Homefront. Monroeville for the Pittsburgh afternoon. One-hotel version: Altoona the whole trip.</p>
+    </div>
+    <aside class="client-lock" aria-label="Locked visit">
+      <img src="img/client-logo-nav.png" width="120" height="40" alt=""/>
+      <div class="meta">
+        <div class="name">Homefront Manufacturing</div>
+        <div class="sub">Locked visit · 21985 Dunnings Hwy, Claysburg PA 16625</div>
+      </div>
+    </aside>
+    <article class="stay-card">
+      <div class="stay-gallery">
+        <img src="img/hampton.jpg" alt="Altoona base" width="800" height="500"/>
+        <div class="row2">
+          <img src="img/hampton2.jpg" alt="Altoona" width="400" height="280"/>
+          <img src="img/hampton3.jpg" alt="Blair County" width="400" height="280"/>
+        </div>
+      </div>
+      <div class="stay-body">
+        <span class="tag">Suggested · not booked</span>
+        <h3>Hampton Inn Altoona</h3>
+        <p class="addr">180 Charlotte Dr, Altoona PA · 26 min to Homefront</p>
+        <p class="why">Best single base if Homefront is the center of the trip. Pittsburgh pack is about 2 hours. South pack about 2.5 hours.</p>
+        <div class="stay-actions">
+          <a class="btn btn-primary" href="https://www.hilton.com/en/hotels/aootnhx-hampton-altoona/" target="_blank" rel="noopener">Hotel site</a>
+          <a class="btn btn-ghost" href="https://www.google.com/maps/search/?api=1&query=Hampton+Inn+Altoona+PA" target="_blank" rel="noopener">Open in Maps</a>
+        </div>
+      </div>
+    </article>
+    <article class="stay-card" style="margin-top:1.5rem">
+      <div class="stay-gallery">
+        <img src="img/springhill.jpg" alt="Monroeville base" width="800" height="500"/>
+        <div class="row2">
+          <img src="img/printpgh.jpg" alt="Monroeville" width="400" height="280"/>
+          <img src="img/tronix.jpg" alt="Pittsburgh" width="400" height="280"/>
+        </div>
+      </div>
+      <div class="stay-body">
+        <span class="tag">Suggested · Pittsburgh pack night</span>
+        <h3>SpringHill Suites Monroeville</h3>
+        <p class="addr">122 Daugherty Dr, Monroeville PA · 48 min from PIT, 7 min to Gamma 3D</p>
+        <p class="why">Stay here the night you do BelleFlex, Gamma 3D, 3D Print Pittsburgh, and Tronix3D. Drive to Altoona after.</p>
+        <div class="stay-actions">
+          <a class="btn btn-primary" href="https://www.marriott.com/en-us/hotels/pitmh-springhill-suites-pittsburgh-monroeville/" target="_blank" rel="noopener">Hotel site</a>
+          <a class="btn btn-ghost" href="https://www.google.com/maps/search/?api=1&query=SpringHill+Suites+Monroeville+PA" target="_blank" rel="noopener">Open in Maps</a>
+        </div>
+      </div>
+    </article>
   </section>
 
-  <section class="facts" id="facts"></section>
+  <section class="block wrap" id="map" aria-labelledby="map-h">
+    <div class="sec-head">
+      <p class="eyebrow">Proximity</p>
+      <h2 class="section-title" id="map-h">Map</h2>
+      <p class="section-dek">Pins stay in sync with the groups below. Homefront is the red pin.</p>
+    </div>
+    <div class="map-shell">
+      <div id="map-canvas" role="region" aria-label="Customer tour map"></div>
+      <div class="map-note">
+        <span>Click a pin or card.</span>
+        <span id="map-count"></span>
+      </div>
+    </div>
+  </section>
 
-  <div class="grid-main">
-    <div>
-      <section class="section">
-        <h2>Places</h2>
-        <div class="cards" id="cards"></div>
+  <div class="band-alt">
+    <div class="wrap">
+      <div class="toolbar" role="search">
+        <input id="q" type="search" placeholder="Search customers…" autocomplete="off"/>
+        <select id="minRating" aria-label="Filter">
+          <option value="0">All groups</option>
+        </select>
+        <span class="count" id="global-count"></span>
+      </div>
+
+      <section class="block" id="pittsburgh" data-kind="pittsburgh" aria-labelledby="pgh-h">
+        <div class="sec-head">
+          <p class="eyebrow">West</p>
+          <h2 class="section-title" id="pgh-h">Pittsburgh pack</h2>
+          <p class="section-dek">Four stops. Do them in one afternoon from Monroeville. About 2 hours from Homefront.</p>
+        </div>
+        <div class="cards" id="grid-pittsburgh"></div>
+      </section>
+
+      <section class="block" id="south" data-kind="south" aria-labelledby="south-h">
+        <div class="sec-head">
+          <p class="eyebrow">South</p>
+          <h2 class="section-title" id="south-h">Martinsburg pack</h2>
+          <p class="section-dek">Highest Shopify dollars on the list. About 2 hours south of Homefront.</p>
+        </div>
+        <div class="cards" id="grid-south"></div>
+      </section>
+
+      <section class="block" id="east" data-kind="east" aria-labelledby="east-h">
+        <div class="sec-head">
+          <p class="eyebrow">East</p>
+          <h2 class="section-title" id="east-h">Carlisle pack</h2>
+          <p class="section-dek">Small accounts. Only if you are already on I-81.</p>
+        </div>
+        <div class="cards" id="grid-east"></div>
+      </section>
+
+      <section class="block" id="virginia" data-kind="virginia" aria-labelledby="va-h">
+        <div class="sec-head">
+          <p class="eyebrow">Virginia</p>
+          <h2 class="section-title" id="va-h">HITT</h2>
+          <p class="section-dek">Falls Church. Already on the outreach table. 3 hours 13 minutes from Homefront. Only stop over the 3-hour cap.</p>
+        </div>
+        <div class="cards" id="grid-virginia"></div>
       </section>
     </div>
-    <aside class="map-panel">
-      <div id="map" aria-label="Map of places"></div>
-      <div class="map-legend">Pins filter with the chips. Click a card or pin for Maps / site.</div>
-    </aside>
   </div>
+
+  <section class="block wrap" id="plan" aria-labelledby="plan-h">
+    <div class="sec-head">
+      <p class="eyebrow">Itinerary</p>
+      <h2 class="section-title" id="plan-h">Suggested days</h2>
+      <p class="section-dek">Not booked. Pick two or three besides Homefront.</p>
+    </div>
+    <div class="plan-grid">
+      <div class="plan">
+        <p class="when">Day 1</p>
+        <h3>Fly PIT · Pittsburgh pack</h3>
+        <ul>
+          <li>Land PIT, drive 48 min to Monroeville</li>
+          <li>Gamma 3D · 3D Print Pittsburgh · Tronix3D</li>
+          <li>BelleFlex in Ford City (50 min north)</li>
+          <li>Night: SpringHill Monroeville</li>
+        </ul>
+      </div>
+      <div class="plan">
+        <p class="when">Day 2</p>
+        <h3>Homefront</h3>
+        <ul>
+          <li>Drive to Altoona / Claysburg (~2h from Monroeville)</li>
+          <li>Homefront Manufacturing, 21985 Dunnings Hwy</li>
+          <li>Night: Hampton Inn Altoona</li>
+        </ul>
+      </div>
+      <div class="plan">
+        <p class="when">Day 3 optional</p>
+        <h3>South pack or HITT</h3>
+        <ul>
+          <li>Anthony Arena, Martinsburg WV (~2h)</li>
+          <li>Bass Head Beads, Keedysville (28 min from Martinsburg)</li>
+          <li>avast marine, Strasburg VA (50 min from Martinsburg)</li>
+          <li>Or keep going to HITT Falls Church (~3h13m from Homefront)</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="block wrap" id="ground" aria-labelledby="ground-h">
+    <div class="sec-head">
+      <p class="eyebrow">Air</p>
+      <h2 class="section-title" id="ground-h">Fly PIT</h2>
+      <p class="section-dek">Pittsburgh International is the only airport that sits next to the densest group and still reaches Homefront the same day.</p>
+    </div>
+    <div class="plan-grid">
+      <div class="plan">
+        <p class="when">Primary</p>
+        <h3>PIT</h3>
+        <ul>
+          <li>48 min to Monroeville pack</li>
+          <li>2h 49m to Homefront</li>
+          <li>Real airline service from Austin</li>
+        </ul>
+      </div>
+      <div class="plan">
+        <p class="when">Backup</p>
+        <h3>MDT Harrisburg</h3>
+        <ul>
+          <li>2h 25m to Homefront</li>
+          <li>41 min to Carlisle</li>
+          <li>Use only if you skip Pittsburgh</li>
+        </ul>
+      </div>
+      <div class="plan">
+        <p class="when">Skip as primary</p>
+        <h3>AOO · HGR · BWI · IAD</h3>
+        <ul>
+          <li>AOO is 26 min but almost no flights</li>
+          <li>HGR is 1h 53m to Homefront, thin service</li>
+          <li>BWI and Dulles are past 3 hours</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
 </main>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<footer class="wrap" style="padding:2.5rem 0 3.5rem;color:var(--muted);font-size:.85rem">Shopify wholesale paid orders, last 12 months vs prior 12 months. Snapshot 14 Sep 2026.</footer>
 <script>
-/* ========== EDIT THIS DATA ========== */
-const META = {
-  lede: "Replace this lede. Lead with the decision, not the research process.",
-  when: "2026-09-14",
-  where: "City, ST",
-  status: "Ready to share",
-  locked: null, // { title, body_html } or null
-  facts: [
-    // { label: "Flights", value: "DL 2581 / DL 2689" },
-  ],
-};
-
-/** @type {Array<{
- *  id:string, kind:string, name:string, addr?:string, caption?:string,
- *  rating?:number|string, lat?:number, lon?:number, img?:string,
- *  color?:string, gmaps?:string, site?:string
- * }>} */
 const PLACES = [
-  // Example — delete and replace with real research:
-  // {
-  //   id: "example",
-  //   kind: "hotel",
-  //   name: "Example Inn",
-  //   addr: "123 Main",
-  //   caption: "2× King · locked",
-  //   rating: 8.4,
-  //   lat: 40.76, lon: -111.89,
-  //   img: "img/hero.jpg",
-  //   color: "#7fb8ff",
-  //   gmaps: "https://www.google.com/maps/search/?api=1&query=Example",
-  //   site: "https://example.com"
-  // },
+  {id:"homefront", kind:"office", name:"Homefront Manufacturing", addr:"21985 Dunnings Hwy, Claysburg PA 16625", caption:"Locked visit. No Shopify wholesale account under this name.", rating:"", l12:0, rev:"Locked", lat:40.2878526, lon:-78.4564239, color:"#ff3b30", gmaps:"https://www.google.com/maps/search/?api=1&query=21985+Dunnings+Hwy+Claysburg+PA+16625", why:"Anchor", img:"img/homefront.jpg", thumbs:[], site:null, label:"Homefront", domId:"homefront"},
+  {id:"belleflex", kind:"pittsburgh", name:"BelleFlex Technologies", addr:"706 Eljer Way, Ford City PA 16226", caption:"$14,299 last 12 mo · new (no prior-year orders). Last order 24 Jul 2026.", rating:"", l12:14299, rev:"$14,299", lat:40.767977, lon:-79.5362894, color:"#0071e3", gmaps:"https://www.google.com/maps/search/?api=1&query=706+Eljer+Way+Ford+City+PA+16226", why:"New and accelerating", img:"img/belleflex.jpg", thumbs:[], site:null, label:"Pittsburgh", domId:"belleflex"},
+  {id:"tronix", kind:"pittsburgh", name:"Tronix3D", addr:"6901 Lynn Way, Pittsburgh PA 15208", caption:"$6,915 last 12 mo vs $5,481 prior. Accelerating, last order 30 Jan 2026.", rating:"", l12:6915, rev:"$6,915", lat:40.4544972, lon:-79.9045806, color:"#0071e3", gmaps:"https://www.google.com/maps/search/?api=1&query=6901+Lynn+Way+Pittsburgh+PA+15208", why:"Cooling recently", img:"img/tronix.jpg", thumbs:[], site:null, label:"Pittsburgh", domId:"tronix"},
+  {id:"printpgh", kind:"pittsburgh", name:"3D Print Pittsburgh", addr:"143 Monroeville Mall, Monroeville PA 15146", caption:"$4,081 last 12 mo vs $8,231 prior. Declining. Last order 4 Mar 2026.", rating:"", l12:4081, rev:"$4,081", lat:40.4285175, lon:-79.7951562, color:"#0071e3", gmaps:"https://www.google.com/maps/search/?api=1&query=143+Monroeville+Mall+Monroeville+PA", why:"Declining", img:"img/printpgh.jpg", thumbs:[], site:null, label:"Pittsburgh", domId:"printpgh"},
+  {id:"gamma3d", kind:"pittsburgh", name:"Gamma 3D", addr:"5062 Greensburg Rd, Murrysville PA 15668", caption:"$3,619 last 12 mo vs $3,705 prior. Flat. Last order 25 Aug 2026.", rating:"", l12:3619, rev:"$3,619", lat:40.4951962, lon:-79.654074, color:"#0071e3", gmaps:"https://www.google.com/maps/search/?api=1&query=5062+Greensburg+Rd+Murrysville+PA+15668", why:"Flat", img:"img/gamma3d.jpg", thumbs:[], site:null, label:"Pittsburgh", domId:"gamma3d"},
+  {id:"arena", kind:"south", name:"Anthony Arena", addr:"244 Needy Rd, Martinsburg WV 25405", caption:"$16,980 last 12 mo vs $9,938 prior. Accelerating. Last order 26 Aug 2026.", rating:"", l12:16980, rev:"$16,980", lat:39.4176982, lon:-77.916275, color:"#34c759", gmaps:"https://www.google.com/maps/search/?api=1&query=244+Needy+Road+Martinsburg+WV+25405", why:"Best dollar stop", img:"img/arena.jpg", thumbs:[], site:null, label:"South", domId:"arena"},
+  {id:"avast", kind:"south", name:"avast marine", addr:"12953 Back Rd, Strasburg VA 22657", caption:"$11,546 last 12 mo vs $4,067 prior. Accelerating. Last order 5 Sep 2026.", rating:"", l12:11546, rev:"$11,546", lat:38.9887251, lon:-78.3622801, color:"#34c759", gmaps:"https://www.google.com/maps/search/?api=1&query=12953+Back+Road+Strasburg+VA+22657", why:"Accelerating", img:"img/avast.jpg", thumbs:[], site:null, label:"South", domId:"avast"},
+  {id:"basshead", kind:"south", name:"Bass Head Beads", addr:"18731 Planters Ln, Keedysville MD 21756", caption:"$5,306 last 12 mo vs $3,290 prior. Accelerating. Last order 16 Jul 2026.", rating:"", l12:5306, rev:"$5,306", lat:39.4862715, lon:-77.700541, color:"#34c759", gmaps:"https://www.google.com/maps/search/?api=1&query=18731+Planters+Lane+Keedysville+MD+21756", why:"Accelerating", img:"img/basshead.jpg", thumbs:[], site:null, label:"South", domId:"basshead"},
+  {id:"smitterz", kind:"east", name:"Smitter'z LLC", addr:"1104 Pine Rd, Carlisle PA 17015", caption:"$1,669 last 12 mo · new (one order 10 Jul 2026).", rating:"", l12:1669, rev:"$1,669", lat:40.201499, lon:-77.1890783, color:"#af52de", gmaps:"https://www.google.com/maps/search/?api=1&query=1104+Pine+Rd+Carlisle+PA+17015", why:"Small", img:"img/smitterz.jpg", thumbs:[], site:null, label:"East", domId:"smitterz"},
+  {id:"hmp", kind:"east", name:"HMP Services", addr:"2205 Pine Rd, Newville PA 17241", caption:"$1,246 last 12 mo · new, last order 15 Mar 2026.", rating:"", l12:1246, rev:"$1,246", lat:40.1730565, lon:-77.3993258, color:"#af52de", gmaps:"https://www.google.com/maps/search/?api=1&query=2205+Pine+Rd+Newville+PA+17241", why:"Quiet 6 months", img:"img/hmp.jpg", thumbs:[], site:null, label:"East", domId:"hmp"},
+  {id:"hitt", kind:"virginia", name:"HITT Contracting", addr:"2900 Fairview Park Dr, Falls Church VA 22042", caption:"$0 last 12 mo · $1,242 prior year. Last order 22 Apr 2025.", rating:"", l12:0, rev:"$0 L12", lat:38.8617373, lon:-77.2173786, color:"#ff9500", gmaps:"https://www.google.com/maps/search/?api=1&query=2900+Fairview+Park+Dr+Falls+Church+VA+22042", why:"Over 3h · quiet year", img:"img/hitt.jpg", thumbs:[], site:"https://hitt.com/", label:"Virginia", domId:"hitt"},
+  {id:"hampton", kind:"hotel", name:"Hampton Inn Altoona", addr:"180 Charlotte Dr, Altoona PA", caption:"Suggested Homefront hub. 26 min.", rating:"", l12:0, rev:"Stay", lat:40.466904, lon:-78.4084117, color:"#86868b", gmaps:"https://www.google.com/maps/search/?api=1&query=Hampton+Inn+Altoona+PA", why:"Stay", img:"img/hampton.jpg", thumbs:[], site:null, label:"Stay", domId:"hampton"},
+  {id:"springhill", kind:"hotel", name:"SpringHill Suites Monroeville", addr:"122 Daugherty Dr, Monroeville PA", caption:"Suggested Pittsburgh pack night.", rating:"", l12:0, rev:"Stay", lat:40.4359841, lon:-79.7543079, color:"#86868b", gmaps:"https://www.google.com/maps/search/?api=1&query=SpringHill+Suites+Monroeville+PA", why:"Stay", img:"img/springhill.jpg", thumbs:[], site:null, label:"Stay", domId:"springhill"},
+  {id:"pit", kind:"airport", name:"Pittsburgh International", addr:"PIT · Moon Township PA", caption:"Fly here.", rating:"", l12:0, rev:"Fly", lat:40.4917828, lon:-80.2370245, color:"#8e8e93", gmaps:"https://www.google.com/maps/search/?api=1&query=Pittsburgh+International+Airport", why:"Fly", img:"img/pit.jpg", thumbs:[], site:null, label:"Airport", domId:"pit"}
 ];
 
-const KIND_LABEL = {
-  hotel: "Hotel", office: "Office", airport: "Airport",
-  cafe: "Cafes", brewery: "Breweries", bar: "Bars",
-  eat: "Food", do: "Do", other: "Other",
+const KIND_GRID = {
+  pittsburgh: 'grid-pittsburgh',
+  south: 'grid-south',
+  east: 'grid-east',
+  virginia: 'grid-virginia',
 };
-const KIND_ORDER = ["hotel","office","airport","cafe","brewery","bar","eat","do","other"];
-/* ========== END EDIT ========== */
 
-const el = (t, cls, html) => {
-  const n = document.createElement(t);
-  if (cls) n.className = cls;
-  if (html != null) n.innerHTML = html;
-  return n;
-};
-const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => (
+  {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]
+));
 
-function bootMeta() {
-  document.getElementById("lede").textContent = META.lede || "";
-  document.getElementById("meta-when").textContent = META.when || "";
-  document.getElementById("meta-where").textContent = META.where || "";
-  document.getElementById("meta-status").textContent = META.status || "";
-  if (META.locked && META.locked.body_html) {
-    const box = document.getElementById("locked");
-    box.hidden = false;
-    document.getElementById("lockedTitle").textContent = META.locked.title || "Locked decision";
-    document.getElementById("lockedBody").innerHTML = META.locked.body_html;
-  }
-  const facts = document.getElementById("facts");
-  (META.facts || []).forEach(f => {
-    const d = el("div", "fact");
-    d.appendChild(el("b", null, esc(f.label)));
-    const s = el("span"); s.textContent = f.value; d.appendChild(s);
-    facts.appendChild(d);
-  });
-}
-
-let activeKind = "all";
 let map, markers = {};
 
-function kindsPresent() {
-  const s = new Set(PLACES.map(p => p.kind || "other"));
-  return KIND_ORDER.filter(k => s.has(k)).concat([...s].filter(k => !KIND_ORDER.includes(k)));
-}
-
-function buildChips() {
-  const host = document.getElementById("kindChips");
-  host.innerHTML = "";
-  const all = el("button", "chip");
-  all.type = "button"; all.textContent = "All"; all.dataset.kind = "all"; all.setAttribute("aria-pressed", "true");
-  host.appendChild(all);
-  kindsPresent().forEach(k => {
-    const b = el("button", "chip");
-    b.type = "button"; b.textContent = KIND_LABEL[k] || k; b.dataset.kind = k; b.setAttribute("aria-pressed", "false");
-    host.appendChild(b);
-  });
-  host.querySelectorAll(".chip").forEach(b => b.addEventListener("click", () => {
-    activeKind = b.dataset.kind;
-    host.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
-    render();
-  }));
-}
-
-function numRating(p) {
+function numR(p) {
   const n = parseFloat(p.rating);
   return Number.isFinite(n) ? n : null;
 }
 
-function filtered() {
-  const q = (document.getElementById("q").value || "").trim().toLowerCase();
-  const minR = parseFloat(document.getElementById("minRating").value) || 0;
-  const sort = document.getElementById("sort").value;
-  let list = PLACES.filter(p => {
-    if (activeKind !== "all" && (p.kind || "other") !== activeKind) return false;
-    if (minR > 0) {
-      const r = numRating(p);
-      if (r == null || r < minR) return false;
-    }
+function filtered(kind) {
+  const q = (document.getElementById('q').value || '').trim().toLowerCase();
+  return PLACES.filter(p => {
+    if (kind && p.kind !== kind) return false;
+    if (!kind && ['hotel','office','airport'].includes(p.kind)) return false;
     if (q) {
-      const hay = `${p.name} ${p.addr||""} ${p.caption||""} ${p.kind||""}`.toLowerCase();
+      const hay = `${p.name} ${p.addr||''} ${p.caption||''} ${p.why||''}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
   });
-  list = list.slice().sort((a,b) => {
-    if (sort === "name") return (a.name||"").localeCompare(b.name||"");
-    if (sort === "rating") return (numRating(b)||-1) - (numRating(a)||-1);
-    const ka = KIND_ORDER.indexOf(a.kind); const kb = KIND_ORDER.indexOf(b.kind);
-    return (ka < 0 ? 99 : ka) - (kb < 0 ? 99 : kb) || (a.name||"").localeCompare(b.name||"");
-  });
-  return list;
 }
 
-function cardNode(p) {
-  const a = el("article", "card");
-  a.tabIndex = 0;
-  a.dataset.id = p.id;
-  const media = el("div", "media");
-  if (p.img) {
-    const img = document.createElement("img");
-    img.src = p.img; img.alt = p.name; img.loading = "lazy";
-    media.appendChild(img);
-  } else {
-    media.style.background = `linear-gradient(135deg, ${p.color||"#2a3548"}, #0c0e12)`;
-  }
-  a.appendChild(media);
-  const body = el("div", "body");
-  body.appendChild(el("div", "kicker", esc(KIND_LABEL[p.kind] || p.kind || "")));
-  body.appendChild(el("h3", null, esc(p.name)));
-  if (p.addr) body.appendChild(el("div", "addr", esc(p.addr)));
-  if (p.caption) body.appendChild(el("div", "cap", esc(p.caption)));
-  const row = el("div", "row");
-  const r = numRating(p);
-  row.appendChild(el("div", "rating", r != null ? String(r) : "—"));
-  const links = el("div", "links");
-  if (p.gmaps) {
-    const g = document.createElement("a"); g.href = p.gmaps; g.target = "_blank"; g.rel = "noopener"; g.textContent = "Maps";
-    g.addEventListener("click", e => e.stopPropagation());
-    links.appendChild(g);
-  }
-  if (p.site) {
-    const s = document.createElement("a"); s.href = p.site; s.target = "_blank"; s.rel = "noopener"; s.textContent = "Site";
-    s.addEventListener("click", e => e.stopPropagation());
-    links.appendChild(s);
-  }
-  row.appendChild(links);
-  body.appendChild(row);
-  a.appendChild(body);
-  const go = () => {
-    if (p.lat != null && map && markers[p.id]) {
-      map.setView([p.lat, p.lon], 15, {animate:true});
-      markers[p.id].openPopup();
-    } else if (p.gmaps) window.open(p.gmaps, "_blank", "noopener");
-  };
-  a.addEventListener("click", go);
-  a.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); }});
-  return a;
+function cardHTML(p) {
+  const img = p.img
+    ? '<div class="media"><img src="' + esc(p.img) + '" alt="" loading="lazy"/></div>'
+    : '<div class="media" style="background:linear-gradient(135deg,' + esc(p.color||'#c7c7cc') + ',#e8e8ed)"></div>';
+  const links = [];
+  if (p.gmaps) links.push('<a href="' + esc(p.gmaps) + '" target="_blank" rel="noopener" data-stop>Maps</a>');
+  if (p.site) links.push('<a href="' + esc(p.site) + '" target="_blank" rel="noopener" data-stop>Site</a>');
+  return '<article class="card" data-id="' + esc(p.id) + '" tabindex="0">' +
+    img +
+    '<div class="body">' +
+      '<h3>' + esc(p.name) + '</h3>' +
+      '<div class="meta">' + esc(p.addr||'') + '</div>' +
+      '<div class="cap">' + esc(p.caption || p.why || '') + '</div>' +
+      '<div class="foot">' +
+        '<span class="rating">' + esc(p.rev || '—') + '</span>' +
+        '<span class="links">' + links.join('') + '</span>' +
+      '</div>' +
+    '</div>' +
+  '</article>';
 }
 
-function ensureMap() {
-  if (map) return;
-  map = L.map("map", {scrollWheelZoom:false}).setView([39.5, -98.3], 4);
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-    attribution: "&copy; OSM &copy; CARTO", maxZoom: 19
-  }).addTo(map);
-}
-
-function renderMap(list) {
-  ensureMap();
-  Object.values(markers).forEach(m => map.removeLayer(m));
-  markers = {};
-  const bounds = [];
-  list.forEach(p => {
-    if (p.lat == null || p.lon == null) return;
-    const color = p.color || "#8ab4ff";
-    const icon = L.divIcon({
-      className: "",
-      html: `<div class="pin-dot" style="background:${color}"></div>`,
-      iconSize: [12,12], iconAnchor: [6,6]
+function renderGrids() {
+  let total = 0;
+  Object.entries(KIND_GRID).forEach(([kind, gid]) => {
+    const list = filtered(kind).sort((a,b) => (b.l12||0) - (a.l12||0) || a.name.localeCompare(b.name));
+    total += list.length;
+    const host = document.getElementById(gid);
+    if (!list.length) {
+      host.innerHTML = '<p class="empty">No matches for this filter.</p>';
+      return;
+    }
+    host.innerHTML = list.map(cardHTML).join('');
+    host.querySelectorAll('.card').forEach(el => {
+      const id = el.dataset.id;
+      const go = () => focusPlace(id);
+      el.addEventListener('click', e => {
+        if (e.target.closest('[data-stop]')) return;
+        go();
+      });
+      el.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); }
+      });
     });
-    const m = L.marker([p.lat, p.lon], {icon}).addTo(map);
-    const bits = [
-      `<strong>${esc(p.name)}</strong>`,
-      p.rating != null ? `Rating ${esc(p.rating)}` : "",
-      p.caption ? esc(p.caption) : "",
-      p.gmaps ? `<a href="${esc(p.gmaps)}" target="_blank" rel="noopener">Open in Maps</a>` : ""
-    ].filter(Boolean).join("<br/>");
-    m.bindPopup(bits);
-    markers[p.id] = m;
-    bounds.push([p.lat, p.lon]);
   });
-  if (bounds.length) map.fitBounds(bounds, {padding:[28,28], maxZoom: 13});
-  setTimeout(() => map.invalidateSize(), 50);
+  document.getElementById('global-count').textContent = `${total} customers shown`;
+  syncMap();
 }
 
-function render() {
-  const list = filtered();
-  document.getElementById("count").textContent = `${list.length} / ${PLACES.length}`;
-  const host = document.getElementById("cards");
-  host.innerHTML = "";
-  if (!list.length) {
-    host.appendChild(el("p", null, "No places match. Widen filters or add PLACES in the page script."));
-  } else {
-    list.forEach(p => host.appendChild(cardNode(p)));
+function focusPlace(id) {
+  const p = PLACES.find(x => x.id === id);
+  if (!p || p.lat == null) return;
+  map.flyTo({ center: [p.lon, p.lat], zoom: 12, essential: true });
+  const m = markers[id];
+  if (m) {
+    const popup = m.getPopup();
+    if (popup) m.togglePopup();
   }
-  renderMap(list);
 }
 
-bootMeta();
-buildChips();
-["q","minRating","sort"].forEach(id => document.getElementById(id).addEventListener("input", render));
-render();
+function popupHTML(p) {
+  return '<strong>' + esc(p.name) + '</strong><br/>' +
+    esc(p.rev||'') + ' · ' + esc(p.caption||'') +
+    (p.gmaps ? ('<br/><a href="' + esc(p.gmaps) + '" target="_blank" rel="noopener">Open in Maps</a>') : '');
+}
+
+function initMap() {
+  map = new maplibregl.Map({
+    container: 'map-canvas',
+    style: 'https://tiles.openfreemap.org/styles/liberty',
+    center: [-78.456, 40.288],
+    zoom: 7.2,
+    attributionControl: true,
+  });
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+  map.on('load', () => { syncMap(); });
+}
+
+function placesForMap() {
+  const q = (document.getElementById('q').value || '').trim().toLowerCase();
+  return PLACES.filter(p => {
+    if (p.lat == null || p.lon == null) return false;
+    if (q) {
+      const hay = `${p.name} ${p.addr||''} ${p.caption||''}`.toLowerCase();
+      if (!hay.includes(q) && !['hotel','office','airport'].includes(p.kind)) return false;
+    }
+    return true;
+  });
+}
+
+function syncMap() {
+  if (!map) return;
+  Object.values(markers).forEach(m => m.remove());
+  markers = {};
+  const list = placesForMap();
+  const bounds = new maplibregl.LngLatBounds();
+  list.forEach(p => {
+    const el = document.createElement('div');
+    el.className = 'marker-dot';
+    el.style.background = p.color || '#0071e3';
+    el.title = p.name;
+    const marker = new maplibregl.Marker({ element: el })
+      .setLngLat([p.lon, p.lat])
+      .setPopup(new maplibregl.Popup({ offset: 12 }).setHTML(popupHTML(p)))
+      .addTo(map);
+    markers[p.id] = marker;
+    bounds.extend([p.lon, p.lat]);
+  });
+  document.getElementById('map-count').textContent = `${list.length} pins`;
+  if (list.length >= 2) {
+    try { map.fitBounds(bounds, { padding: 48, maxZoom: 9, duration: 0 }); } catch (_) {}
+  }
+}
+
+const sectionIds = ['overview','stay','map','pittsburgh','south','east','virginia','plan','ground'];
+const toc = document.getElementById('toc');
+const tocToggle = document.getElementById('toc-toggle');
+const navLinks = [...document.querySelectorAll('.toc a.nav')];
+const setNavH = () => {
+  const h = Math.ceil(toc.getBoundingClientRect().height) || 48;
+  document.documentElement.style.setProperty('--nav-h', h + 'px');
+};
+if (tocToggle) {
+  tocToggle.addEventListener('click', () => {
+    const open = toc.classList.toggle('is-open');
+    tocToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    tocToggle.setAttribute('aria-label', open ? 'Close section menu' : 'Open section menu');
+    tocToggle.textContent = open ? 'Close' : 'Menu';
+    requestAnimationFrame(setNavH);
+  });
+}
+navLinks.forEach(a => a.addEventListener('click', () => {
+  if (toc.classList.contains('is-open')) {
+    toc.classList.remove('is-open');
+    tocToggle.setAttribute('aria-expanded', 'false');
+    tocToggle.setAttribute('aria-label', 'Open section menu');
+    tocToggle.textContent = 'Menu';
+    requestAnimationFrame(setNavH);
+  }
+}));
+window.addEventListener('resize', setNavH);
+setNavH();
+
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(en => {
+    if (!en.isIntersecting) return;
+    const id = en.target.id;
+    navLinks.forEach(a => {
+      const on = a.getAttribute('href') === '#' + id;
+      a.setAttribute('aria-current', on ? 'true' : 'false');
+    });
+  });
+}, { rootMargin: '-40% 0px -55% 0px', threshold: 0 });
+sectionIds.forEach(id => {
+  const el = document.getElementById(id);
+  if (el) io.observe(el);
+});
+
+document.getElementById('q').addEventListener('input', renderGrids);
+document.getElementById('minRating').addEventListener('change', renderGrids);
+
+initMap();
+renderGrids();
 </script>
 </body>
 </html>
